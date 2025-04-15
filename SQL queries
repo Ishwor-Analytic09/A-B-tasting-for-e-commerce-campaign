@@ -1,0 +1,103 @@
+
+Q1: What is the conversion rate for control and treatment groups?
+
+SELECT 
+  group, 
+  COUNT(*) AS total_users,
+  SUM(converted) AS total_converted,
+  ROUND(SUM(converted) * 1.0 / COUNT(*), 4) AS conversion_rate
+FROM ab_data
+GROUP BY group;
+
+Answer:
+
+Control: ~12.04%
+Treatment: ~11.88%
+(Control group slightly outperformed treatment)
+
+Q2: Which days of the week have the highest conversion rates?
+SELECT 
+  day_of_week,
+  ROUND(AVG(converted), 4) AS avg_conversion_rate
+FROM ab_data
+GROUP BY day_of_week
+ORDER BY avg_conversion_rate DESC;
+
+Answer:
+Highest conversion on: Sunday, Monday, Tuesday
+(These might be good days to test new versions)
+
+Q3: At what hours are users most likely to convert?
+SELECT 
+  hour,
+  ROUND(AVG(converted), 4) AS avg_conversion_rate
+FROM ab_data
+GROUP BY hour
+ORDER BY avg_conversion_rate DESC;
+
+Answer:
+Peak conversion hours: Between 11 AM – 1 PM and around 9 PM
+
+
+Q4: How does daily conversion distribution vary between control and treatment?
+
+SELECT 
+  date, 
+  group,
+  ROUND(AVG(converted), 4) AS daily_conversion_rate
+FROM ab_data
+GROUP BY date, group
+ORDER BY date;
+
+Answer:
+
+Both groups show similar distribution. Treatment slightly underperforms on average, with occasional spikes.
+
+
+Q5: Are there any anomalies or spikes in daily conversion rates?
+
+SELECT 
+  date, 
+  ROUND(AVG(converted), 4) AS conversion_rate
+FROM ab_data
+GROUP BY date
+ORDER BY conversion_rate DESC
+LIMIT 5;
+
+Answer:
+
+A few dates show conversion rates above 15%, which could be outliers or influenced by promotions or random variation.
+
+Q6: Are the user counts balanced between groups each day?
+
+SELECT 
+  date,
+  SUM(CASE WHEN group = 'control' THEN 1 ELSE 0 END) AS control_users,
+  SUM(CASE WHEN group = 'treatment' THEN 1 ELSE 0 END) AS treatment_users
+FROM ab_data
+GROUP BY date
+ORDER BY date;
+
+Answer:
+
+Yes, both groups are generally well-balanced, which makes the test fair.
+
+Q7: Are there specific hours/days where treatment performs significantly better or worse?
+
+SELECT 
+  day_of_week,
+  hour,
+  ROUND(AVG(CASE WHEN group = 'control' THEN converted END), 4) AS control_conversion,
+  ROUND(AVG(CASE WHEN group = 'treatment' THEN converted END), 4) AS treatment_conversion,
+  ROUND(
+    AVG(CASE WHEN group = 'treatment' THEN converted END) - 
+    AVG(CASE WHEN group = 'control' THEN converted END), 4
+  ) AS diff
+FROM ab_data
+GROUP BY day_of_week, hour
+ORDER BY diff DESC;
+
+Answer:
+Some hours like Tuesday 10 AM or Thursday 8 PM show treatment group outperforming, but no consistent pattern overall.
+
+
